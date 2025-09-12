@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useAuth } from '../contexts/AuthContext'
+import { Link, useLocation } from 'react-router-dom'
 import LoginForm from '../auth/LoginForm'
 import SignupForm from '../auth/SignupForm'
 
@@ -7,9 +8,14 @@ const Header = () => {
   const [showLogin, setShowLogin] = useState(false)
   const [showSignup, setShowSignup] = useState(false)
   const { user, signOut, loading } = useAuth()
+  const location = useLocation()
 
   const handleSignOut = () => {
     signOut()
+  }
+
+  const isActive = (path) => {
+    return location.pathname === path
   }
 
   // Show loading state
@@ -37,7 +43,25 @@ const Header = () => {
             {user ? (
               // Authenticated state
               <>
-                <span className="text-gray-700">
+                <nav className="flex items-center space-x-6 mr-6">
+                  <Link
+                    to="/"
+                    className={`${
+                      isActive('/') ? 'text-yellow-600' : 'text-gray-600 hover:text-gray-900'
+                    } transition-colors`}
+                  >
+                    Home
+                  </Link>
+                  <Link
+                    to="/history"
+                    className={`${
+                      isActive('/history') ? 'text-yellow-600' : 'text-gray-600 hover:text-gray-900'
+                    } transition-colors`}
+                  >
+                    History
+                  </Link>
+                </nav>
+                <span className="text-gray-700 mr-4">
                   Hi, {user.email.split('@')[0]}!
                 </span>
                 <button 
