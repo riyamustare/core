@@ -1,13 +1,14 @@
 import { useState, useRef, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import { ArrowUp } from "lucide-react";
+import { ArrowUp, Sparkles } from "lucide-react";
 
 const Chat = () => {
   const [messages, setMessages] = useState([]);
   const [inputMessage, setInputMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [showSummary, setShowSummary] = useState(false);
+  const [showEndConfirm, setShowEndConfirm] = useState(false);
   const [sessionSummary, setSessionSummary] = useState(null);
   const messagesEndRef = useRef(null);
   const { user } = useAuth();
@@ -67,6 +68,8 @@ const Chat = () => {
 
   const handleEndSession = async () => {
     setIsLoading(true);
+    setShowEndConfirm(false);
+    
     try {
       const response = await fetch('http://localhost:8000/api/chat/', {
         method: 'POST',
@@ -94,48 +97,67 @@ const Chat = () => {
   };
 
   return (
-    <div className="flex flex-col h-[calc(100vh-64px)] bg-gray-50">
+    <div className="flex flex-col h-[calc(100vh-64px)] bg-[#FAF7F2]">
       {/* Header */}
-      <div className="bg-white border-b px-4 py-3 flex justify-between items-center shadow-sm">
-        <h1 className="text-lg font-semibold">Therapy Session</h1>
+      <div className="bg-[#FAF7F2] px-6 py-4 flex justify-between items-center">
+        <div className="flex items-center">
+          <Sparkles className="w-6 h-6 text-blue-500 mr-3" />
+        </div>
         <button
-          onClick={handleEndSession}
+          onClick={() => setShowEndConfirm(true)}
           disabled={isLoading || messages.length === 0}
-          className="px-4 py-2 bg-yellow-400 text-gray-900 rounded-full hover:bg-yellow-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          className="px-4 py-2 bg-[#b3d9ff] text-black rounded-full hover:bg-[#82bffb] disabled:opacity-50 disabled:cursor-not-allowed transition-colors border border-black font-medium"
         >
-          End Session
+          end session
         </button>
       </div>
 
       {/* Chat Messages */}
-      <div className="flex-1 overflow-y-auto p-6 space-y-4">
+      <div className="flex-1 overflow-y-auto px-6 py-4 space-y-6">
         {messages.length === 0 && (
-          <div className="text-center text-gray-500 mt-8">
-            Start your conversation with the AI therapist...
+          <div className="text-center text-gray-500 mt-20">
+            <Sparkles className="w-12 h-12 text-blue-500 mx-auto mb-4" />
+            <p>ready to listen whenever you are...</p>
           </div>
         )}
 
         {messages.map((message, index) => (
-          <div
-            key={index}
-            className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
-          >
-            <div
-              className={`max-w-[75%] rounded-2xl px-5 py-3 shadow-sm ${
-                message.role === 'user'
-                  ? 'bg-blue-500 text-white rounded-br-none'
-                  : 'bg-white text-gray-800 border rounded-bl-none'
-              }`}
-            >
-              <p className="whitespace-pre-wrap">{message.content}</p>
+          <div key={index} className="flex items-start space-x-3">
+            {message.role === 'assistant' && (
+              <div className="flex-shrink-0">
+                <Sparkles className="w-6 h-6 text-blue-500 mt-1" />
+              </div>
+            )}
+            
+            <div className={`flex-1 ${message.role === 'user' ? 'flex justify-end' : ''}`}>
+              <div
+                className={`max-w-[80%] rounded-2xl px-4 py-3 ${
+                  message.role === 'user'
+                    ? 'bg-gray-300 text-gray-800 ml-auto'
+                    : 'bg-gray-300 text-gray-800'
+                }`}
+              >
+                <p className="whitespace-pre-wrap text-sm">{message.content}</p>
+              </div>
             </div>
+
+            {message.role === 'user' && (
+              <div className="flex-shrink-0">
+                <div className="w-8 h-8 bg-[#b3d9ff] rounded-full flex items-center justify-center border border-black">
+                  <span className="text-xs font-medium">😊</span>
+                </div>
+              </div>
+            )}
           </div>
         ))}
 
         {isLoading && (
-          <div className="flex justify-start">
-            <div className="bg-white text-gray-500 rounded-2xl px-5 py-3 shadow animate-pulse">
-              Thinking...
+          <div className="flex items-start space-x-3">
+            <div className="flex-shrink-0">
+              <Sparkles className="w-6 h-6 text-blue-500 mt-1" />
+            </div>
+            <div className="bg-gray-300 text-gray-500 rounded-2xl px-4 py-3 animate-pulse">
+              <p className="text-sm">thinking...</p>
             </div>
           </div>
         )}
@@ -144,28 +166,60 @@ const Chat = () => {
       </div>
 
       {/* Message Input */}
-      <form
-        onSubmit={handleSendMessage}
-        className="border-t bg-white px-4 py-3"
-      >
-        <div className="flex items-center max-w-3xl mx-auto rounded-full border px-3 py-2 bg-gray-50 focus-within:ring-2 focus-within:ring-blue-400">
-          <input
-            type="text"
-            value={inputMessage}
-            onChange={(e) => setInputMessage(e.target.value)}
-            placeholder="Type your message..."
-            className="flex-1 bg-transparent px-3 py-2 focus:outline-none"
-            disabled={isLoading}
-          />
-          <button
-            type="submit"
-            disabled={isLoading || !inputMessage.trim()}
-            className="p-2 rounded-full bg-blue-500 text-white hover:bg-blue-600 disabled:opacity-50 transition-colors"
-          >
-            <ArrowUp className="w-5 h-5" />
-          </button>
+      <div className="px-6 pb-6">
+        <form onSubmit={handleSendMessage} className="relative">
+          <div className="flex items-center border border-gray-300 rounded-2xl bg-white px-4 py-3 focus-within:border-gray-400">
+            <div className="flex-shrink-0 mr-3">
+              <div className="w-6 h-6 bg-[#b3d9ff] rounded-full flex items-center justify-center border border-black">
+                <span className="text-xs">😊</span>
+              </div>
+            </div>
+            <input
+              type="text"
+              value={inputMessage}
+              onChange={(e) => setInputMessage(e.target.value)}
+              placeholder=""
+              className="flex-1 bg-transparent focus:outline-none text-sm"
+              disabled={isLoading}
+            />
+            <button
+              type="submit"
+              disabled={isLoading || !inputMessage.trim()}
+              className="flex-shrink-0 ml-3 p-2 rounded-full bg-[#b3d9ff] text-black hover:bg-[#82bffb] disabled:opacity-50 transition-colors border border-black"
+            >
+              <ArrowUp className="w-4 h-4" />
+            </button>
+          </div>
+        </form>
+      </div>
+
+      {/* End Session Confirmation Modal */}
+      {showEndConfirm && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-[#FAF7F2] rounded-2xl p-8 max-w-sm w-full mx-4 text-center">
+            <h3 className="text-xl font-semibold text-gray-900 mb-2">
+              end the session
+            </h3>
+            <p className="text-gray-600 mb-6 text-sm">
+              are you sure you want to end this session?
+            </p>
+            <div className="flex space-x-3 justify-center">
+              <button
+                onClick={() => setShowEndConfirm(false)}
+                className="px-6 py-2 bg-black text-white rounded-lg font-medium hover:bg-gray-800 transition-colors"
+              >
+                cancel
+              </button>
+              <button
+                onClick={handleEndSession}
+                className="px-6 py-2 bg-[#b3d9ff] text-black rounded-lg font-medium hover:bg-[#82bffb] transition-colors border border-black"
+              >
+                confirm
+              </button>
+            </div>
+          </div>
         </div>
-      </form>
+      )}
 
       {/* Summary Modal */}
       {showSummary && sessionSummary && (
@@ -216,7 +270,7 @@ const Chat = () => {
                 </button>
                 <button
                   onClick={() => setShowSummary(false)}
-                  className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
+                  className="px-4 py-2 bg-[#b3d9ff] text-black rounded-lg hover:bg-[#82bffb] border border-black"
                 >
                   Continue Session
                 </button>
