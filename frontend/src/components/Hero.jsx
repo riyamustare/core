@@ -2,9 +2,9 @@ import { useState } from 'react'
 import AuthModal from './auth/AuthModal'
 import { useAuth } from '../contexts/AuthContext'
 import { Link, useLocation } from 'react-router-dom'
-import star from '../assets/logoSet.png' 
+import star from '../assets/logoSet.png'
 import star2 from '../assets/long.png'
-
+import History from '../assets/history.svg'
 
 const Header = () => {
   const [showAuth, setShowAuth] = useState(false)
@@ -48,82 +48,54 @@ const Header = () => {
   return (
     <>
       <header className="bg-[#FAF7F2]">
-        <div className="max-w-6xl mx-auto px-6 py-4 flex justify-between items-center">
-          <div className="text-3xl font-extrabold text-black">core</div>
+  <div className="max-w-6xl mx-auto px-6 py-4 flex justify-between items-center">
+    
+    {/* Logo (only show when NOT logged in) */}
+    {!user && (
+      <div className="text-3xl font-extrabold text-black">
+        core
+      </div>
+    )}
 
-          <div className="flex items-center space-x-3">
-            {user ? (
-        /* Vertical sidebar for authenticated users */
-        <div className="fixed left-0 top-0 h-full w-20 bg-white border-r border-gray-200 flex flex-col items-center py-6 z-50">
-          <div className="text-2xl font-extrabold text-black mb-8">core</div>
-          
-          <div className="flex flex-col items-center space-y-6 flex-1">
-            <nav className="flex flex-col items-center space-y-6">
-              <Link
-                to="/"
-                className={`p-3 rounded-lg transition-colors ${
-                  isActive('/') ? 'bg-blue-100 text-blue-600' : 'text-gray-600 hover:text-black'
-                }`}
+    {/* Right-side buttons / sidebar */}
+    <div className="flex items-center space-x-3">
+      {user ? (
+        // Sidebar nav + logout button for logged-in user
+        <div className="flex flex-col items-center space-y-6 w-8 md:w-12">
+          <Link to="/" className="mt-6">
+              <img src={star2} alt="Home" className="w-12 h-auto" />
+            </Link>
+          <Link to="/history" className="mt-1" >
+              <img src={History} alt="History" className="w-6 h-auto" />
+            </Link>
+          <button
+                onClick={handleSignOut}
+                className="absolute bottom-8 bg-black text-white text-sm px-2 py-2 rounded-md shadow-lg hover:bg-gray-800 transition-colors"
               >
-                {/* HomeIcon component */}
-                <div className="w-6 h-6">🏠</div>
-              </Link>
-              <Link
-                to="/history"
-                className={`p-3 rounded-lg transition-colors ${
-                  isActive('/history') ? 'bg-blue-100 text-blue-600' : 'text-gray-600 hover:text-black'
-                }`}
-              >
-                {/* HistoryIcon component */}
-                <div className="w-6 h-6">📋</div>
-              </Link>
-            </nav>
-            
-            <div className="mt-auto relative">
-              <button
-                onClick={toggleProfileMenu}
-                className="p-3 rounded-lg text-gray-600 hover:text-black transition-colors"
-              >
-                {/* ProfileIcon component */}
-                <div className="w-6 h-6">👤</div>
+                Logout
               </button>
-              
-              {showProfileMenu && (
-                <div className="absolute bottom-0 left-full ml-2 bg-white border border-gray-200 rounded-md shadow-lg py-2 min-w-[200px]">
-                  <span className="block px-4 py-2 text-sm text-gray-700 border-b border-gray-100">
-                    Hi, {user.email.split('@')[0]}!
-                  </span>
-                  <button
-                    onClick={handleSignOut}
-                    className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors"
-                  >
-                    Sign Out
-                  </button>
-                </div>
-              )}
-            </div>
-          </div>
         </div>
       ) : (
-              <>
-                <button
-                  onClick={handleShowLogin}
-                  className="bg-black text-white w-[100px] h-[40px] rounded-md font-medium transition-colors duration-200 hover:bg-gray-900 flex items-center justify-center"
-                >
-                  login
-                </button>
-                <button
-                  onClick={handleShowSignup}
-                  className="bg-[#b3d9ff] text-black w-[100px] h-[40px] rounded-md border border-black font-medium transition-colors duration-200 hover:bg-[#82bffb] flex items-center justify-center"
-                >
-                  signup
-                </button>
+        // Login / Signup buttons
+        <>
+          <button
+            onClick={handleShowLogin}
+            className="bg-black text-white w-[100px] h-[40px] rounded-md font-medium transition-colors duration-200 hover:bg-gray-900 flex items-center justify-center"
+          >
+            Login
+          </button>
+          <button
+            onClick={handleShowSignup}
+            className="bg-[#b3d9ff] text-black w-[100px] h-[40px] rounded-md border border-black font-medium transition-colors duration-200 hover:bg-[#82bffb] flex items-center justify-center"
+          >
+            Signup
+          </button>
+        </>
+      )}
+    </div>
+  </div>
+</header>
 
-              </>
-            )}
-          </div>
-        </div>
-      </header>
 
       {/* Auth Modal */}
       <AuthModal
@@ -203,3 +175,4 @@ const HeroPage = () => {
 }
 
 export default HeroPage
+export { Header }

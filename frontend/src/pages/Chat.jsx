@@ -1,15 +1,22 @@
 import { useState, useRef, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import { ArrowUp, Sparkles } from "lucide-react";
+import { ArrowUp } from "lucide-react";
+import Logo from '../assets/long.png'; // Ensure you have a logo image in assets
+import User from '../assets/user.png'; // Placeholder user image
+import {Header} from '../components/Hero';
+import { supabase } from '../lib/supabase';
+import OnboardingForm from '../components/OnboardingForm';
 
 const Chat = () => {
   const [messages, setMessages] = useState([]);
   const [inputMessage, setInputMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [showSummary, setShowSummary] = useState(false);
-  const [showEndConfirm, setShowEndConfirm] = useState(false);
+  const [showEndSessionModal, setShowEndSessionModal] = useState(false);
   const [sessionSummary, setSessionSummary] = useState(null);
+  const [isOnboardingComplete, setIsOnboardingComplete] = useState(false);
+  const [isCheckingOnboarding, setIsCheckingOnboarding] = useState(true);
   const messagesEndRef = useRef(null);
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -21,6 +28,29 @@ const Chat = () => {
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
+
+  useEffect(() => {
+    const checkOnboardingStatus = async () => {
+      if (!user) return;
+      
+      try {
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('onboarding_complete')
+          .eq('id', user.id)
+          .single();
+        
+        if (error) throw error;
+        setIsOnboardingComplete(data?.onboarding_complete || false);
+      } catch (error) {
+        console.error('Error checking onboarding status:', error);
+      } finally {
+        setIsCheckingOnboarding(false);
+      }
+    };
+
+    checkOnboardingStatus();
+  }, [user]);
 
   const handleSendMessage = async (e) => {
     e.preventDefault();
@@ -68,8 +98,6 @@ const Chat = () => {
 
   const handleEndSession = async () => {
     setIsLoading(true);
-    setShowEndConfirm(false);
-    
     try {
       const response = await fetch('http://localhost:8000/api/chat/', {
         method: 'POST',
@@ -89,6 +117,7 @@ const Chat = () => {
       const data = await response.json();
       setSessionSummary(data);
       setShowSummary(true);
+      setShowEndSessionModal(false);
     } catch (error) {
       console.error('Error ending session:', error);
     } finally {
@@ -96,96 +125,117 @@ const Chat = () => {
     }
   };
 
+  const handleOnboardingComplete = () => {
+    setIsOnboardingComplete(true);
+  };
+
+  if (isCheckingOnboarding) {
+    return (
+      <div className="flex justify-center items-center h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-gray-900"></div>
+      </div>
+    );
+  }
+
+  if (!isOnboardingComplete) {
+    return <OnboardingForm onComplete={handleOnboardingComplete} />;
+  }
+
   return (
-    <div className="flex flex-col h-[calc(100vh-64px)] bg-[#FAF7F2]">
+    <>
+    <Header />
+    <div className="flex flex-col h-screen bg-[#f5f5f0]">
       {/* Header */}
-      <div className="bg-[#FAF7F2] px-6 py-4 flex justify-between items-center">
-        <div className="flex items-center">
-          <Sparkles className="w-6 h-6 text-blue-500 mr-3" />
-        </div>
+      <div className="flex justify-end p-6">
         <button
-          onClick={() => setShowEndConfirm(true)}
+          onClick={() => setShowEndSessionModal(true)}
           disabled={isLoading || messages.length === 0}
-          className="px-4 py-2 bg-[#b3d9ff] text-black rounded-full hover:bg-[#82bffb] disabled:opacity-50 disabled:cursor-not-allowed transition-colors border border-black font-medium"
+          className="px-6 py-2 bg-[#b3d9ff] text-black rounded-full border border-black hover:bg-[#82bffb] disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium"
         >
           end session
         </button>
       </div>
 
       {/* Chat Messages */}
-      <div className="flex-1 overflow-y-auto px-6 py-4 space-y-6">
-        {messages.length === 0 && (
-          <div className="text-center text-gray-500 mt-20">
-            <Sparkles className="w-12 h-12 text-blue-500 mx-auto mb-4" />
-            <p>ready to listen whenever you are...</p>
-          </div>
-        )}
-
-        {messages.map((message, index) => (
-          <div key={index} className="flex items-start space-x-3">
-            {message.role === 'assistant' && (
-              <div className="flex-shrink-0">
-                <Sparkles className="w-6 h-6 text-blue-500 mt-1" />
-              </div>
-            )}
-            
-            <div className={`flex-1 ${message.role === 'user' ? 'flex justify-end' : ''}`}>
-              <div
-                className={`max-w-[80%] rounded-2xl px-4 py-3 ${
-                  message.role === 'user'
-                    ? 'bg-gray-300 text-gray-800 ml-auto'
-                    : 'bg-gray-300 text-gray-800'
-                }`}
-              >
-                <p className="whitespace-pre-wrap text-sm">{message.content}</p>
-              </div>
+      <div className="flex-1 overflow-y-auto px-6 pb-6">
+        <div className="max-w-4xl mx-auto space-y-6">
+          {messages.length === 0 && (
+            <div className="text-center text-gray-500 mt-8">
+              Start your conversation...
             </div>
+          )}
 
-            {message.role === 'user' && (
-              <div className="flex-shrink-0">
-                <div className="w-8 h-8 bg-[#b3d9ff] rounded-full flex items-center justify-center border border-black">
-                  <span className="text-xs font-medium">😊</span>
+          {messages.map((message, index) => (
+            <div key={index} className={`flex items-start space-x-4 mb-6 ${
+              message.role === 'user' ? 'flex-row-reverse space-x-reverse' : ''
+            }`}>
+              {message.role === 'assistant' && (
+                <div className="flex-shrink-0 w-10 h-10 rounded-full">
+                  <img 
+                    src={Logo}
+                    alt="User profile"
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+              )}
+              
+              {message.role === 'user' && (
+                <div className="flex-shrink-0 w-10 h-10 rounded-full overflow-hidden">
+                  <img 
+                    src={User} 
+                    alt="User profile"
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+              )}
+              
+              <div className={`flex-1 max-w-[70%] ${
+                message.role === 'user' ? 'flex justify-end' : ''
+              }`}>
+                <div
+                  className={`rounded-3xl px-6 py-4 shadow-sm ${
+                    message.role === 'user'
+                      ? 'bg-white border border-gray-200 rounded-br-md'
+                      : 'bg-gray-100 text-gray-800 rounded-bl-md'
+                  }`}
+                >
+                  <p className="whitespace-pre-wrap text-sm leading-relaxed">{message.content}</p>
                 </div>
               </div>
-            )}
-          </div>
-        ))}
-
-        {isLoading && (
-          <div className="flex items-start space-x-3">
-            <div className="flex-shrink-0">
-              <Sparkles className="w-6 h-6 text-blue-500 mt-1" />
             </div>
-            <div className="bg-gray-300 text-gray-500 rounded-2xl px-4 py-3 animate-pulse">
-              <p className="text-sm">thinking...</p>
-            </div>
-          </div>
-        )}
+          ))}
 
+          {isLoading && (
+            <div className="flex items-start space-x-4 mb-6">
+              <div className="flex-shrink-0 w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center shadow-lg">
+                <div className="w-5 h-5 text-white">✦</div>
+              </div>
+              <div className="bg-gray-100 text-gray-500 rounded-3xl rounded-bl-md px-6 py-4 animate-pulse shadow-sm">
+                <p className="text-sm">Thinking...</p>
+              </div>
+            </div>
+          )}
+        </div>
+        
         <div ref={messagesEndRef} />
       </div>
 
       {/* Message Input */}
       <div className="px-6 pb-6">
-        <form onSubmit={handleSendMessage} className="relative">
-          <div className="flex items-center border border-gray-300 rounded-2xl bg-white px-4 py-3 focus-within:border-gray-400">
-            <div className="flex-shrink-0 mr-3">
-              <div className="w-6 h-6 bg-[#b3d9ff] rounded-full flex items-center justify-center border border-black">
-                <span className="text-xs">😊</span>
-              </div>
-            </div>
+        <form onSubmit={handleSendMessage} className="max-w-4xl mx-auto">
+          <div className="flex items-center rounded-2xl border border-gray-300 bg-white px-4 py-3 focus-within:border-blue-400">
             <input
               type="text"
               value={inputMessage}
               onChange={(e) => setInputMessage(e.target.value)}
-              placeholder=""
-              className="flex-1 bg-transparent focus:outline-none text-sm"
+              placeholder="Type your message..."
+              className="flex-1 bg-transparent px-2 focus:outline-none text-sm"
               disabled={isLoading}
             />
             <button
               type="submit"
               disabled={isLoading || !inputMessage.trim()}
-              className="flex-shrink-0 ml-3 p-2 rounded-full bg-[#b3d9ff] text-black hover:bg-[#82bffb] disabled:opacity-50 transition-colors border border-black"
+              className="p-2 rounded-full bg-[#b3d9ff] text-black hover:bg-[#82bffb] disabled:opacity-50 transition-colors border border-gray-300 ml-2"
             >
               <ArrowUp className="w-4 h-4" />
             </button>
@@ -194,25 +244,23 @@ const Chat = () => {
       </div>
 
       {/* End Session Confirmation Modal */}
-      {showEndConfirm && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-[#FAF7F2] rounded-2xl p-8 max-w-sm w-full mx-4 text-center">
-            <h3 className="text-xl font-semibold text-gray-900 mb-2">
-              end the session
-            </h3>
-            <p className="text-gray-600 mb-6 text-sm">
-              are you sure you want to end this session?
-            </p>
-            <div className="flex space-x-3 justify-center">
+      {showEndSessionModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-xl p-8 max-w-md w-full">
+            <h2 className="text-xl font-semibold mb-2">end the session</h2>
+            <p className="text-gray-600 mb-6">are you sure you want to end this session?</p>
+            
+            <div className="flex justify-center space-x-4">
               <button
-                onClick={() => setShowEndConfirm(false)}
-                className="px-6 py-2 bg-black text-white rounded-lg font-medium hover:bg-gray-800 transition-colors"
+                onClick={() => setShowEndSessionModal(false)}
+                className="px-6 py-2 bg-black text-white rounded-lg hover:bg-gray-800 transition-colors"
               >
                 cancel
               </button>
               <button
                 onClick={handleEndSession}
-                className="px-6 py-2 bg-[#b3d9ff] text-black rounded-lg font-medium hover:bg-[#82bffb] transition-colors border border-black"
+                disabled={isLoading}
+                className="px-6 py-2 bg-[#b3d9ff] text-black rounded-lg hover:bg-[#82bffb] disabled:opacity-50 transition-colors border border-black"
               >
                 confirm
               </button>
@@ -270,7 +318,7 @@ const Chat = () => {
                 </button>
                 <button
                   onClick={() => setShowSummary(false)}
-                  className="px-4 py-2 bg-[#b3d9ff] text-black rounded-lg hover:bg-[#82bffb] border border-black"
+                  className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
                 >
                   Continue Session
                 </button>
@@ -280,6 +328,7 @@ const Chat = () => {
         </div>
       )}
     </div>
+    </>
   );
 };
 

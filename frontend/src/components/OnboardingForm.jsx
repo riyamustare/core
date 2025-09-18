@@ -1,10 +1,11 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useAuth } from '../contexts/AuthContext'
 import { supabase } from '../lib/supabase'
+import { ArrowLeft } from 'lucide-react' // <-- modern back icon
+import starIcon from '../assets/long.png' // update path
 
 const OnboardingForm = ({ onComplete }) => {
   const [currentStep, setCurrentStep] = useState(1)
-  const [isAnalyzing, setIsAnalyzing] = useState(false)
   const [formData, setFormData] = useState({
     gender: '',
     age_range: '',
@@ -23,10 +24,13 @@ const OnboardingForm = ({ onComplete }) => {
     }
   }
 
-  const handleAnalyzing = async () => {
-    setIsAnalyzing(true)
-    
-    // Save to database
+  const prevStep = () => {
+    if (currentStep > 1) {
+      setCurrentStep(currentStep - 1)
+    }
+  }
+
+  const handleComplete = async () => {
     try {
       const { error } = await supabase
         .from('profiles')
@@ -37,15 +41,25 @@ const OnboardingForm = ({ onComplete }) => {
         .eq('id', user.id)
 
       if (error) throw error
-      
-      // Simulate analyzing animation
-      setTimeout(() => {
-        setIsAnalyzing(false)
-        setCurrentStep(7)
-      }, 3000)
+      onComplete()
     } catch (error) {
       console.error('Error saving onboarding data:', error)
-      setIsAnalyzing(false)
+    }
+  }
+
+  // figure out if "continue" should be enabled
+  const isContinueDisabled = () => {
+    switch (currentStep) {
+      case 2:
+        return !formData.gender
+      case 3:
+        return !formData.age_range
+      case 4:
+        return !formData.relationship_status
+      case 5:
+        return !formData.support_area
+      default:
+        return false
     }
   }
 
@@ -53,34 +67,45 @@ const OnboardingForm = ({ onComplete }) => {
     switch (currentStep) {
       case 1:
         return (
-          <div className="text-center">
-            <h2 className="text-3xl font-bold text-gray-900 mb-8 leading-relaxed">
-              Hi friend — we created this because life can be a lot and sometimes you just need to talk.
-            </h2>
-            <button
-              onClick={nextStep}
-              className="bg-yellow-400 hover:bg-yellow-500 text-gray-900 px-8 py-4 rounded-md border border-black font-medium text-lg transition-colors"
-            >
-              Continue
-            </button>
+          <div className="flex flex-col w-full max-w-md space-y-6">
+            <div className="flex items-start space-x-3">
+              <img src={starIcon} alt="star" className="w-6 h-6 mt-1" />
+              <p className="text-gray-900 text-sm leading-relaxed text-left">
+                hi name,
+                <br /><br />
+                we created core because life can be a lottt
+                <br /><br />
+                sometimes you just need someone to talk to
+                <br /><br />
+                whether you’re navigating a rough day,<br />
+                figuring things out,<br />
+                or just need a moment to breathe
+                <br /><br />
+                we’re here for you &lt;3
+                <br /><br />
+                love,<br />
+                riya
+              </p>
+            </div>
           </div>
         )
 
       case 2:
         return (
-          <div className="text-center">
-            <h2 className="text-3xl font-bold text-gray-900 mb-8">
-              How do you identify?
+          <div className="flex flex-col items-start text-left space-y-6 w-full max-w-md mt-10">
+            <h2 className="text-lg font-semibold text-gray-900">
+              how do you identify?
             </h2>
-            <div className="space-y-4 max-w-md mx-auto">
-              {['Female', 'Male', 'Non-binary', 'Other'].map((option) => (
+            <div className="w-full space-y-3">
+              {['female', 'male', 'non-binary', 'other'].map(option => (
                 <button
                   key={option}
-                  onClick={() => {
-                    handleOptionSelect('gender', option)
-                    nextStep()
-                  }}
-                  className="w-full py-4 px-6 border-2 border-gray-300 rounded-lg hover:border-yellow-400 hover:bg-yellow-50 transition-all text-left font-medium"
+                  onClick={() => handleOptionSelect('gender', option)}
+                  className={`w-full py-3 px-4 rounded-md text-base text-left font-medium ${
+                    formData.gender === option
+                      ? 'bg-[#add8ff] text-gray-900'
+                      : 'bg-gray-200 text-gray-900'
+                  }`}
                 >
                   {option}
                 </button>
@@ -91,19 +116,18 @@ const OnboardingForm = ({ onComplete }) => {
 
       case 3:
         return (
-          <div className="text-center">
-            <h2 className="text-3xl font-bold text-gray-900 mb-8">
-              How many years young are you?
-            </h2>
-            <div className="space-y-4 max-w-md mx-auto">
-              {['Under 18', '18–24', '35+', 'Prefer not to say'].map((option) => (
+          <div className="flex flex-col items-start text-left space-y-6 w-full max-w-md mt-10">
+            <h2 className="text-lg font-semibold text-gray-900">how old are you?</h2>
+            <div className="w-full space-y-3">
+              {['under 18', '18–24', '25–34', '35+', 'prefer not to say'].map(option => (
                 <button
                   key={option}
-                  onClick={() => {
-                    handleOptionSelect('age_range', option)
-                    nextStep()
-                  }}
-                  className="w-full py-4 px-6 border-2 border-gray-300 rounded-lg hover:border-yellow-400 hover:bg-yellow-50 transition-all text-left font-medium"
+                  onClick={() => handleOptionSelect('age_range', option)}
+                  className={`w-full py-3 px-4 rounded-md text-base text-left font-medium ${
+                    formData.age_range === option
+                      ? 'bg-[#add8ff] text-gray-900'
+                      : 'bg-gray-200 text-gray-900'
+                  }`}
                 >
                   {option}
                 </button>
@@ -114,28 +138,27 @@ const OnboardingForm = ({ onComplete }) => {
 
       case 4:
         return (
-          <div className="text-center">
-            <h2 className="text-3xl font-bold text-gray-900 mb-8">
-              Relationship status
-            </h2>
-            <div className="space-y-4 max-w-md mx-auto">
+          <div className="flex flex-col items-start text-left space-y-6 w-full max-w-md mt-10">
+            <h2 className="text-lg font-semibold text-gray-900">relationship status</h2>
+            <div className="w-full space-y-3">
               {[
-                'Situationship',
-                'Single',
-                'In a relationship',
-                "It's complicated",
-                'Married',
-                'Divorced/Separated',
-                'Widowed',
-                'Prefer not to say'
-              ].map((option) => (
+                'single',
+                'situationship',
+                'in a relationship',
+                "it’s complicated",
+                'married',
+                'divorced / separated',
+                'widowed',
+                'prefer not to say'
+              ].map(option => (
                 <button
                   key={option}
-                  onClick={() => {
-                    handleOptionSelect('relationship_status', option)
-                    nextStep()
-                  }}
-                  className="w-full py-4 px-6 border-2 border-gray-300 rounded-lg hover:border-yellow-400 hover:bg-yellow-50 transition-all text-left font-medium"
+                  onClick={() => handleOptionSelect('relationship_status', option)}
+                  className={`w-full py-3 px-4 rounded-md text-base text-left font-medium ${
+                    formData.relationship_status === option
+                      ? 'bg-[#add8ff] text-gray-900'
+                      : 'bg-gray-200 text-gray-900'
+                  }`}
                 >
                   {option}
                 </button>
@@ -146,19 +169,18 @@ const OnboardingForm = ({ onComplete }) => {
 
       case 5:
         return (
-          <div className="text-center">
-            <h2 className="text-3xl font-bold text-gray-900 mb-8">
-              What are you most looking for support with?
-            </h2>
-            <div className="space-y-4 max-w-md mx-auto">
-              {['Anxiety', 'Depression', 'Relationship', 'Loneliness', 'Something else'].map((option) => (
+          <div className="flex flex-col items-start text-left space-y-6 w-full max-w-md mt-10">
+            <h2 className="text-lg font-semibold text-gray-900">what are you most looking for support with?</h2>
+            <div className="w-full space-y-3">
+              {['anxiety', 'depression', 'relationship', 'loneliness', 'something else'].map(option => (
                 <button
                   key={option}
-                  onClick={() => {
-                    handleOptionSelect('support_area', option)
-                    nextStep()
-                  }}
-                  className="w-full py-4 px-6 border-2 border-gray-300 rounded-lg hover:border-yellow-400 hover:bg-yellow-50 transition-all text-left font-medium"
+                  onClick={() => handleOptionSelect('support_area', option)}
+                  className={`w-full py-3 px-4 rounded-md text-base text-left font-medium ${
+                    formData.support_area === option
+                      ? 'bg-[#add8ff] text-gray-900'
+                      : 'bg-gray-200 text-gray-900'
+                  }`}
                 >
                   {option}
                 </button>
@@ -169,67 +191,24 @@ const OnboardingForm = ({ onComplete }) => {
 
       case 6:
         return (
-          <div className="text-center">
-            <h2 className="text-3xl font-bold text-gray-900 mb-8">
-              Our commitment to you
-            </h2>
-            <div className="max-w-md mx-auto mb-8">
-              <div className="space-y-6">
-                <div className="flex items-center space-x-4 p-4 bg-gray-50 rounded-lg">
-                  <div className="w-3 h-3 bg-yellow-400 rounded-full"></div>
-                  <span className="text-lg font-medium text-gray-700">Locked tight</span>
-                </div>
-                <div className="flex items-center space-x-4 p-4 bg-gray-50 rounded-lg">
-                  <div className="w-3 h-3 bg-yellow-400 rounded-full"></div>
-                  <span className="text-lg font-medium text-gray-700">No peeking</span>
-                </div>
-                <div className="flex items-center space-x-4 p-4 bg-gray-50 rounded-lg">
-                  <div className="w-3 h-3 bg-yellow-400 rounded-full"></div>
-                  <span className="text-lg font-medium text-gray-700">Pinky promise</span>
-                </div>
-              </div>
+          <div className="flex flex-col items-start text-left space-y-6 w-full max-w-md mt-10">
+            <h2 className="text-lg font-semibold text-gray-900">our promise to you</h2>
+            <div className="text-gray-700 text-base space-y-2 w-full">
+              <p>✨ everything you share stays private</p>
+              <p>✨ no judgment, ever</p>
+              <p>✨ we’re here to listen</p>
             </div>
-            <button
-              onClick={handleAnalyzing}
-              className="bg-yellow-400 hover:bg-yellow-500 text-gray-900 px-8 py-4 rounded-md border border-black font-medium text-lg transition-colors"
-            >
-              Continue
-            </button>
           </div>
         )
 
       case 7:
-        if (isAnalyzing) {
-          return (
-            <div className="text-center">
-              <h2 className="text-3xl font-bold text-gray-900 mb-8">
-                Analyzing…
-              </h2>
-              <div className="flex justify-center mb-8">
-                <div className="relative">
-                  <div className="w-16 h-16 border-4 border-gray-200 rounded-full"></div>
-                  <div className="absolute top-0 left-0 w-16 h-16 border-4 border-yellow-400 rounded-full border-t-transparent animate-spin"></div>
-                </div>
-              </div>
-              <p className="text-gray-600">Setting up your personalized experience...</p>
-            </div>
-          )
-        }
-        
         return (
-          <div className="text-center">
-            <h2 className="text-3xl font-bold text-gray-900 mb-8">
-              Ready to start your journey
-            </h2>
-            <p className="text-xl text-gray-700 mb-8 max-w-lg mx-auto">
-              Great! We've set up your personalized space. You're all ready to start having meaningful conversations with core.
+          <div className="flex flex-col items-start text-left space-y-6 w-full max-w-md mt-10">
+            <h2 className="text-lg font-semibold text-gray-900">you’re all set!</h2>
+            <p className="text-base text-gray-700">
+              we’ve set up your personalized space.<br />
+              you’re ready to start your journey with core.
             </p>
-            <button
-              onClick={onComplete}
-              className="bg-yellow-400 hover:bg-yellow-500 text-gray-900 px-8 py-4 rounded-md border border-black font-medium text-lg transition-colors"
-            >
-              Start conversation
-            </button>
           </div>
         )
 
@@ -239,27 +218,43 @@ const OnboardingForm = ({ onComplete }) => {
   }
 
   return (
-    <div className="min-h-screen bg-white flex items-center justify-center py-12">
-      <div className="max-w-2xl w-full px-6">
-        {/* Progress indicator */}
-        <div className="mb-12">
-          <div className="flex justify-center space-x-2">
-            {[1, 2, 3, 4, 5, 6, 7].map((step) => (
-              <div
-                key={step}
-                className={`w-3 h-3 rounded-full transition-colors ${
-                  step <= currentStep ? 'bg-yellow-400' : 'bg-gray-300'
-                }`}
-              />
-            ))}
-          </div>
-          <div className="text-center mt-4 text-gray-600">
-            Step {currentStep} of 7
-          </div>
+    <div className="min-h-screen bg-[#fefcfa] flex flex-col justify-between items-center px-6 py-8">
+      {/* Top bar with back button + progress */}
+      <div className="w-full max-w-md flex items-center space-x-3">
+        <button
+          onClick={prevStep}
+          disabled={currentStep === 1}
+          className={`p-2 rounded-full transition ${
+            currentStep === 1 ? 'opacity-30 cursor-not-allowed' : 'hover:bg-gray-100'
+          }`}
+        >
+          <ArrowLeft className="w-5 h-5 text-gray-800" />
+        </button>
+        <div className="flex-1 h-1 bg-gray-200 rounded-full">
+          <div
+            className="h-1 bg-gray-800 rounded-full transition-all"
+            style={{ width: `${(currentStep / 7) * 100}%` }}
+          ></div>
         </div>
+      </div>
 
+      {/* Step Content */}
+      <div className="flex-1 flex items-start justify-center w-full mt-10">
         {renderStep()}
       </div>
+
+      {/* Continue button */}
+      <button
+        onClick={currentStep === 7 ? handleComplete : nextStep}
+        disabled={isContinueDisabled()}
+        className={`w-full max-w-md py-3 rounded-md text-base font-medium mt-6 transition ${
+          isContinueDisabled()
+            ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+            : 'bg-[#add8ff] text-gray-900 hover:bg-[#9ed0ff]'
+        }`}
+      >
+        continue
+      </button>
     </div>
   )
 }
