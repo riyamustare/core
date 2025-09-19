@@ -6,18 +6,17 @@ import star from '../assets/logoSet.png'
 import star2 from '../assets/long.png'
 import History from '../assets/history.svg'
 
+import { Menu } from "lucide-react" // hamburger icon
+
 const Header = () => {
   const [showAuth, setShowAuth] = useState(false)
   const [authView, setAuthView] = useState('login')
   const { user, signOut, loading } = useAuth()
   const location = useLocation()
+  const [menuOpen, setMenuOpen] = useState(false)
 
   const handleSignOut = () => {
     signOut()
-  }
-
-  const isActive = (path) => {
-    return location.pathname === path
   }
 
   const handleShowLogin = () => {
@@ -47,55 +46,86 @@ const Header = () => {
 
   return (
     <>
-      <header className="bg-[#FAF7F2]">
-  <div className="max-w-6xl mx-auto px-6 py-4 flex justify-between items-center">
-    
-    {/* Logo (only show when NOT logged in) */}
-    {!user && (
-      <div className="text-3xl font-extrabold text-black">
-        core
-      </div>
-    )}
-
-    {/* Right-side buttons / sidebar */}
-    <div className="flex items-center space-x-3">
+      {/* Authenticated Floating Header */}
       {user ? (
-        // Sidebar nav + logout button for logged-in user
-        <div className="flex flex-col items-center space-y-6 w-8 md:w-12">
-          <Link to="/" className="mt-6">
-              <img src={star2} alt="Home" className="w-12 h-auto" />
+        <header className="fixed top-4 left-1/2 -translate-x-1/2 w-[90%] max-w-5xl bg-[#FAF7F2]/70 backdrop-blur-md rounded-2xl shadow-lg z-50">
+          <div className="px-6 py-3 flex justify-between items-center">
+            {/* Logo */}
+            <Link to="/" className="text-xl md:text-2xl font-extrabold text-black">
+              core
             </Link>
-          <Link to="/history" className="mt-1" >
-              <img src={History} alt="History" className="w-6 h-auto" />
-            </Link>
-          <button
+
+            {/* Large screen nav */}
+            <nav className="hidden md:flex items-center space-x-6">
+              {/* <Link to="/" className="text-black hover:text-gray-700 font-medium">
+                Home
+              </Link> */}
+              <Link to="/history" className="text-black hover:text-gray-700 font-medium">
+                History
+              </Link>
+              <button
                 onClick={handleSignOut}
-                className="absolute bottom-8 bg-black text-white text-sm px-2 py-2 rounded-md shadow-lg hover:bg-gray-800 transition-colors"
+                className="bg-black text-white text-sm px-4 py-2 rounded-lg shadow hover:bg-gray-800 transition"
               >
                 Logout
               </button>
-        </div>
-      ) : (
-        // Login / Signup buttons
-        <>
-          <button
-            onClick={handleShowLogin}
-            className="bg-black text-white w-[100px] h-[40px] rounded-md font-medium transition-colors duration-200 hover:bg-gray-900 flex items-center justify-center"
-          >
-            Login
-          </button>
-          <button
-            onClick={handleShowSignup}
-            className="bg-[#b3d9ff] text-black w-[100px] h-[40px] rounded-md border border-black font-medium transition-colors duration-200 hover:bg-[#82bffb] flex items-center justify-center"
-          >
-            Signup
-          </button>
-        </>
-      )}
-    </div>
-  </div>
-</header>
+            </nav>
 
+            {/* Small screen hamburger */}
+            <button
+              onClick={() => setMenuOpen(!menuOpen)}
+              className="md:hidden p-2 rounded-lg hover:bg-black/5"
+            >
+              <Menu className="w-6 h-6 text-black" />
+            </button>
+          </div>
+
+          {/* Mobile dropdown menu */}
+          {menuOpen && (
+            <div className="md:hidden flex flex-col px-6 pb-4 space-y-3">
+              {/* <Link to="/" onClick={() => setMenuOpen(false)} className="text-black hover:text-gray-700">
+                Home
+              </Link> */}
+              <Link to="/history" onClick={() => setMenuOpen(false)} className="text-black hover:text-gray-700">
+                History
+              </Link>
+              <button
+                onClick={() => {
+                  handleSignOut()
+                  setMenuOpen(false)
+                }}
+                className="bg-black text-white text-sm px-4 py-2 rounded-lg shadow hover:bg-gray-800 transition"
+              >
+                Logout
+              </button>
+            </div>
+          )}
+        </header>
+      ) : (
+        // Unauthenticated Header
+        <header className="bg-[#FAF7F2]">
+          <div className="max-w-6xl mx-auto px-6 py-4 flex justify-between items-center">
+            {/* Logo */}
+            <div className="text-3xl font-extrabold text-black">core</div>
+
+            {/* Login / Signup buttons */}
+            <div className="flex items-center space-x-3">
+              <button
+                onClick={handleShowLogin}
+                className="bg-black text-white w-[100px] h-[40px] rounded-md font-medium hover:bg-gray-900 transition"
+              >
+                Login
+              </button>
+              <button
+                onClick={handleShowSignup}
+                className="bg-[#b3d9ff] text-black w-[100px] h-[40px] rounded-md border border-black font-medium hover:bg-[#82bffb] transition"
+              >
+                Signup
+              </button>
+            </div>
+          </div>
+        </header>
+      )}
 
       {/* Auth Modal */}
       <AuthModal
@@ -107,6 +137,7 @@ const Header = () => {
   )
 }
 
+
 const LandingPage = () => {
   const [showAuth, setShowAuth] = useState(false)
 
@@ -116,7 +147,7 @@ const LandingPage = () => {
         <div className="text-center max-w-2xl mx-auto">
           {/* Heading */}
           <h1 className="text-4xl md:text-6xl font-extrabold text-black leading-snug">
-            for when your brain <br />
+            for when your brain<br />
             won’t shut up!
           </h1>
 

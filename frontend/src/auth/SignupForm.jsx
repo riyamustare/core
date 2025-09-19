@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useAuth } from '../contexts/AuthContext'
 import { supabase } from '../lib/supabase'
+import { useNavigate } from 'react-router-dom'
 
 const SignupForm = ({ onClose, onSwitchToLogin }) => {
   // Common states
@@ -17,6 +18,7 @@ const SignupForm = ({ onClose, onSwitchToLogin }) => {
   const [otp, setOtp] = useState(['', '', '', '', '', ''])
   
   const { signUp } = useAuth()
+  const navigate = useNavigate()
 
   // Signup handlers
   const handleSignupSubmit = async (e) => {
@@ -103,7 +105,8 @@ const SignupForm = ({ onClose, onSwitchToLogin }) => {
       })
       
       if (error) throw error
-      onClose() // Close the modal after successful verification
+      onClose() // Close the modal
+      navigate('/chat') // Redirect to chat page which will show onboarding for new users
     } catch (error) {
       setError(error.message)
     } finally {
@@ -212,7 +215,7 @@ const SignupForm = ({ onClose, onSwitchToLogin }) => {
                 type="button"
                 onClick={handleSignupSubmit}
                 disabled={loading}
-                className="w-full bg-[#b3d9ff] hover:bg-[#82bffb] text-black py-3 px-4 rounded-lg font-medium transition-colors disabled:opacity-50 border border-black"
+                className="w-full bg-[#b3d9ff] hover:bg-[#82bffb] text-black py-3 px-8 rounded-md font-semibold transition-colors disabled:opacity-50 border border-black"
               >
                 {loading ? 'creating account...' : 'sign up'}
               </button>
@@ -238,7 +241,7 @@ const SignupForm = ({ onClose, onSwitchToLogin }) => {
             {/* Google Sign Up */}
             <button
               onClick={handleGoogleSignUp}
-              className="w-full bg-[#b3d9ff] hover:bg-[#82bffb] text-black py-3 px-4 rounded-lg font-medium transition-colors border border-black mt-2"
+              className="w-full bg-[#b3d9ff] hover:bg-[#82bffb] text-black py-3 px-8 rounded-md font-semibold transition-colors border border-black mt-2"
             >
               google
             </button>
@@ -297,7 +300,7 @@ const SignupForm = ({ onClose, onSwitchToLogin }) => {
                 type="button"
                 onClick={handleOTPSubmit}
                 disabled={loading}
-                className="w-full bg-[#b3d9ff] hover:bg-[#82bffb] text-black py-3 px-4 rounded-lg font-medium transition-colors disabled:opacity-50 border border-black"
+                className="w-full bg-[#b3d9ff] hover:bg-[#82bffb] text-black py-3 px-8 rounded-md font-semibold transition-colors disabled:opacity-50 border border-black"
               >
                 {loading ? 'verifying...' : 'verify code'}
               </button>

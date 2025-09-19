@@ -52,6 +52,18 @@ const Chat = () => {
     checkOnboardingStatus();
   }, [user]);
 
+useEffect(() => {
+    if (!isCheckingOnboarding && isOnboardingComplete && messages.length === 0) {
+      setMessages([
+        {
+          role: 'assistant',
+          content: "Hey there I'm here to chat with you. How are you feeling today?"
+        }
+      ]);
+    }
+  }, [isCheckingOnboarding, isOnboardingComplete, messages.length]);
+
+
   const handleSendMessage = async (e) => {
     e.preventDefault();
     if (!inputMessage.trim()) return;
@@ -144,27 +156,27 @@ const Chat = () => {
   return (
     <>
     <Header />
-    <div className="flex flex-col h-screen bg-[#f5f5f0]">
-      {/* Header */}
-      <div className="flex justify-end p-6">
-        <button
-          onClick={() => setShowEndSessionModal(true)}
-          disabled={isLoading || messages.length === 0}
-          className="px-6 py-2 bg-[#b3d9ff] text-black rounded-full border border-black hover:bg-[#82bffb] disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium"
-        >
-          end session
-        </button>
-      </div>
+    <div className="flex flex-col h-screen bg-[#f5f5f0] pt-24">
+      {/* Session Actions */}
+<div className="px-6 mb-4">
+  <div className="max-w-5xl mx-auto flex justify-end">
+    <button
+      onClick={() => setShowEndSessionModal(true)}
+      disabled={isLoading || messages.length === 1}
+      className="px-6 py-2 bg-[#b3d9ff] text-black rounded-full border border-black 
+                 hover:bg-[rgb(130,191,251)] disabled:opacity-50 disabled:cursor-not-allowed 
+                 transition-colors font-medium shadow-sm"
+    >
+      end session
+    </button>
+  </div>
+</div>
+
 
       {/* Chat Messages */}
       <div className="flex-1 overflow-y-auto px-6 pb-6">
         <div className="max-w-4xl mx-auto space-y-6">
-          {messages.length === 0 && (
-            <div className="text-center text-gray-500 mt-8">
-              Start your conversation...
-            </div>
-          )}
-
+          
           {messages.map((message, index) => (
             <div key={index} className={`flex items-start space-x-4 mb-6 ${
               message.role === 'user' ? 'flex-row-reverse space-x-reverse' : ''

@@ -1,5 +1,93 @@
 import { useState } from 'react'
 import footerImage from '../assets/footer.png'
+import AuthModal from './auth/AuthModal'
+import { Check } from "lucide-react"
+
+const Pricing = () => {
+  const plans = [
+    {
+      name: "Monthly",
+      price: "₹999",
+      period: "/month",
+      description: "The basics for automating your design tokens and assets syncing",
+      button: "Start free trial",
+      buttonColor: "bg-black hover:bg-gray-800 text-white",
+      features: ["1 user", "1 repository", "Unlimited sources", "Unlimited destinations"],
+      accent: "black"
+    },
+    {
+      name: "Daily",
+      price: "₹49",
+      period: "/month",
+      description: "Built for teams looking to streamline their workflows",
+      button: "Start for free",
+      buttonColor: "bg-[#b3d9ff] hover:bg-[#82bffb] text-black",
+      features: ["4 users", "2 repositories", "Unlimited sources", "Unlimited destinations"],
+      accent: "black",
+      popular: true
+    },
+    {
+      name: "Yearly",
+      price: "₹9999",
+      period: "/month",
+      description: "The basics for automating your design tokens and assets syncing",
+      button: "Start free trial",
+      buttonColor: "bg-black hover:bg-gray-800 text-white",
+      features: ["1 user", "1 repository", "Unlimited sources", "Unlimited destinations"],
+      accent: "black"
+    }
+  ]
+
+  return (
+    <section className="bg-[#FAF7F2] py-16">
+      <h2 className="text-2xl md:text-3xl font-bold text-center text-gray-900 mb-12">
+          try more with core
+        </h2>
+      <div className="max-w-5xl mx-auto px-6 grid md:grid-cols-3 gap-8">
+        {plans.map((plan, idx) => (
+          <div
+            key={idx}
+            className={`relative rounded-2xl border ${
+              plan.popular ? "border-bg-[#82bffb] shadow-lg" : "border-gray-200"
+            } p-6 flex flex-col`}
+          >
+
+            {/* Plan name */}
+            <h3 className="text-lg font-semibold text-gray-900">{plan.name}</h3>
+
+            {/* Price */}
+            <div className="mt-3 mb-2">
+              <span className="text-3xl font-bold text-gray-900">{plan.price}</span>
+              {plan.period && <span className="text-gray-600 text-lg ml-1">{plan.period}</span>}
+            </div>
+
+            {/* Description */}
+            <p className="text-gray-600 text-sm mb-6">{plan.description}</p>
+
+            {/* CTA Button */}
+            <button
+              className={`${plan.buttonColor} font-medium border py-2.5 px-4 rounded-md w-full transition-colors`}
+            >
+              {plan.button}
+            </button>
+
+            {/* Features */}
+            <ul className="mt-6 space-y-3 text-sm text-gray-700">
+              {plan.features.map((feature, fIdx) => (
+                <li key={fIdx} className="flex items-center space-x-2">
+                  <Check
+                    className={`h-5 w-5 text-black`}
+                  />
+                  <span>{feature}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        ))}
+      </div>
+    </section>
+  )
+}
 
 // FAQ Section Component
 const FAQSection = () => {
@@ -90,7 +178,9 @@ const FAQSection = () => {
 }
 
 // CTA Section Component
-const CTASection = ({ onGetStarted }) => {
+const CTASection = () => {
+  const [showAuth, setShowAuth] = useState(false)
+
   return (
     <section className="bg-[#FAF7F2] py-12">
       <div className="max-w-4xl mx-auto px-6 text-center">
@@ -106,12 +196,18 @@ const CTASection = ({ onGetStarted }) => {
 
         {/* CTA Button */}
         <button
-          onClick={onGetStarted}
+          onClick={() => setShowAuth(true)}
           className="bg-[#b3d9ff] hover:bg-[#82bffb] text-black font-semibold px-8 py-3 rounded-md border border-black transition-colors"
         >
           get started
         </button>
+        
       </div>
+      <AuthModal
+        isOpen={showAuth}
+        onClose={() => setShowAuth(false)}
+        initialView="signup"
+      />
     </section>
   )
 }
@@ -139,6 +235,7 @@ const Footer = () => {
 const FAQAndFooter = ({ footerImage, onGetStarted }) => {
   return (
     <>
+    <Pricing />
       <FAQSection />
       <CTASection onGetStarted={onGetStarted} />
       <Footer footerImage={footerImage} />
